@@ -1,6 +1,10 @@
 package ro.mirodone.bullscowsguessgame;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -12,7 +16,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button button_answer;
+    Button button_answer, button_reset, button_quit;
 
     EditText text_bulls, text_cows;
 
@@ -35,26 +39,35 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         button_answer = findViewById(R.id.buttonAnswer);
+        button_reset = findViewById(R.id.btn_reset);
+        button_quit = findViewById(R.id.btn_quit);
         text_bulls = findViewById(R.id.text_bulls);
         text_cows = findViewById(R.id.text_cows);
         tv_output = findViewById(R.id.tv_output);
 
-        allNumbers = new ArrayList<>();
+        start();
 
-        //add all numbers to the main list
-        //no zeros, no duplicates
-        for (int i = 1234; i <= 9876; i++) {
-            if (!checkForZero(i) && !checkForDuplicates(i)) {
-                allNumbers.add(i);
+        button_reset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                allNumbers.clear();
+                guessNumber = 1234;
+                outputString = "";
+                text_cows.clearFocus();
+                text_bulls.clearFocus();
+                start();
+
             }
-        }
+        });
 
-        //calculate the possibilities and make the first guess
-        remainingCount = allNumbers.size();
-        oldCount = remainingCount;
-        outputString = outputString + "Remaining possibilities " + remainingCount + "\n";
-        outputString = outputString + "My guess is " + guessNumber + "\n";
-        tv_output.setText(outputString);
+        button_quit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finishAndRemoveTask();
+            }
+        });
+
 
 
         button_answer.setOnClickListener(new View.OnClickListener() {
@@ -134,16 +147,70 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         outputString = outputString + "Great! Your number is " + guessNumber + "\n";
                         tv_output.setText(outputString);
+                        showAlertDialog();
                     }
                 } else {
                     outputString = outputString + "Wrong input!\n";
                     tv_output.setText(outputString);
+                    showAlertDialog();
                 }
             }
         });
 
     }
 
+
+    public void showAlertDialog() {
+
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setMessage("Do you want to try again?");
+        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                startActivity(intent);
+            }
+        });
+
+
+        alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+                finishAndRemoveTask();
+            }
+        });
+        alertDialog.create().show();
+    }
+
+
+    public void start() {
+
+        allNumbers = new ArrayList<>();
+
+        //add all numbers to the main list
+        //no zeros, no duplicates
+        for (int i = 1234; i <= 9876; i++) {
+            if (!checkForZero(i) && !checkForDuplicates(i)) {
+                allNumbers.add(i);
+            }
+        }
+
+        //calculate the possibilities and make the first guess
+        remainingCount = allNumbers.size();
+        oldCount = remainingCount;
+        outputString = outputString + "Remaining possibilities " + remainingCount + "\n";
+        outputString = outputString + "My guess is " + guessNumber + "\n";
+        tv_output.setText(outputString);
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        showAlertDialog();
+        //  super.onBackPressed();
+    }
 
     // check for bulls in a number
     private int checkBulls(int all) {
